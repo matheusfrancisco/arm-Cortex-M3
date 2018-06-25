@@ -1,0 +1,27 @@
+
+
+CC = g++
+FLAGS = -Wall -D_LINUX_
+
+
+
+main: main.o memoria.o SA.o
+	${CC} ${FLAGS} main.o memoria.o SA.o -o main
+	
+main.o:	main.cpp SA.o
+	${CC} ${FLAGS} main.cpp -c
+	
+memoria.o: memoria.cpp memoria.h
+	${CC} ${FLAGS} memoria.cpp -c
+	
+SA.o:	SA.cpp SA.h memoria.o
+	${CC} ${FLAGS} SA.cpp -c
+	
+clean:
+	rm -f *.o main
+
+
+install:
+	cp main /bin
+
+
