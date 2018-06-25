@@ -77,7 +77,9 @@ void meu_fseek ( MEU_FILE *A, uint16_t offset );
 int meu_fgetc( MEU_FILE *A );
 /**/
 int meu_feof (MEU_FILE *A);
- 
+
+/**/
+uint16_t meu_fwrite(uint8_t *ptr, uint16_t tamanho, uint16_t count, MEU_FILE *A)
 
 /*Função formata SA*/
 void meu_fomartar();
