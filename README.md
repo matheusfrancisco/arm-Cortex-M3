@@ -34,5 +34,11 @@ As seguintes implementações foram realizadas
 ##### i2c Software
 ##### Deselvovimento Sistema de Arquivo
 
+Desenvolver um sistema de arquivo para o kit ARM e LINUX utilizando a biblioteca i2c desenvolvida juntamente com o professor da disciplina.
+<a href="">Documentação do trabalho</a>
+
+
+
+
 
 
