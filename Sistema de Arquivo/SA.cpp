@@ -177,42 +177,55 @@ int meu_fclose(MEU_FILE *A)
 
 /*Inicio do Cabeçalho*/
 
-uint16_t le_cabecalho ()
-{
-	/*retorna o valor do cabeçalho 
-	Quer dizer o valor do próximo bloco disponivel para alocação*/
-	uint16_t numero;
-	memoria.read(0, 2, (uint8_t *) &numero);
-	return numero;
-}
-void escreve_cabecalho (uint16_t numero)
-{
-	/*/grava o numero do proximo bloco disponível no cabeçalho.*/
-	memoria.write(0, 2, (uint8_t *) &numero);
-}
-
-/*Fim do Cabeçalho*/
-
-void leia_entrada (uint8_t numero, struct inodo *i)
-{
-	/* pula o cabecalho (2) e faz o numero da entrada vezes o
-	 tamanho, isso retorna a posição na memória da entrada.*/
-	uint16_t posicao = 2 + numero*sizeof(struct inodo);
-	memoria.read(posicao, sizeof(struct inodo), (uint8_t *)i);  //le a entrada
-}
-
-void escreva_entrada (uint8_t numero, struct inodo *i)
-{
-	/* pula o cabecalho (2) e faz o numero da entrada vezes o
-	 tamanho, isso retorna a posição na memória da entrada.*/
-	uint16_t posicao = 2 + numero*sizeof(struct inodo);
-	memoria.write(posicao, sizeof(struct inodo), (uint8_t *)i);// grava a entrada
-}
-
+/** Inicio da manipulação de Arquivo **/
+/**
+ * MEU_fseek() - Reposition stream position indicator
+ *
+ * @descriptionS
+ * 		
+ *
+ * @param
+ * 		
+ * @return
+ * 		
+ */
 void meu_fseek ( MEU_FILE *A, uint16_t offset )
 {
 	A->posicao = offset;
+	/*Falta implementar algo aqui Manão bundão*/
 }
+
+/**
+ * MEU_feof() -
+ *
+ * @descriptionS
+ * 		
+ *
+ * @param
+ * 		
+ * @return
+ * 		
+ */
+int meu_feof (MEU_FILE *A)
+{
+
+	/*Vai retornar zero  se a corrente for menor q o
+	tamanho e retorna 1 se a posição for 
+	maior ou igual(chegou no final do arquivo.*/
+	struct inodo lida;
+	if (A == NULL) return 1;
+	uint16_t id = A->id;
+
+	
+		
+	leia_entrada(id, &lida);
+	
+	if (lida.tam > A->posicao) return 0;
+	return 1;
+	
+}
+
+
 
 int meu_fgetc( MEU_FILE *A )
 {
@@ -265,20 +278,39 @@ int meu_fgetc( MEU_FILE *A )
 	return valor;
 }
 
-int meu_feof (MEU_FILE *A)
-{
-	struct inodo lida;
-	if (A == NULL) return 1;
-	uint16_t id = A->id;
 
-	
-		
-	leia_entrada(id, &lida);
-	
-	if (lida.tam > A->posicao) return 0;
-	return 1;
-	
+uint16_t le_cabecalho ()
+{
+	/*retorna o valor do cabeçalho 
+	Quer dizer o valor do próximo bloco disponivel para alocação*/
+	uint16_t numero;
+	memoria.read(0, 2, (uint8_t *) &numero);
+	return numero;
 }
+void escreve_cabecalho (uint16_t numero)
+{
+	/*/grava o numero do proximo bloco disponível no cabeçalho.*/
+	memoria.write(0, 2, (uint8_t *) &numero);
+}
+
+/*Fim do Cabeçalho*/
+
+void leia_entrada (uint8_t numero, struct inodo *i)
+{
+	/* pula o cabecalho (2) e faz o numero da entrada vezes o
+	 tamanho, isso retorna a posição na memória da entrada.*/
+	uint16_t posicao = 2 + numero*sizeof(struct inodo);
+	memoria.read(posicao, sizeof(struct inodo), (uint8_t *)i);  //le a entrada
+}
+
+void escreva_entrada (uint8_t numero, struct inodo *i)
+{
+	/* pula o cabecalho (2) e faz o numero da entrada vezes o
+	 tamanho, isso retorna a posição na memória da entrada.*/
+	uint16_t posicao = 2 + numero*sizeof(struct inodo);
+	memoria.write(posicao, sizeof(struct inodo), (uint8_t *)i);// grava a entrada
+}
+
 
 /**
  * MEU_fputc() - 
