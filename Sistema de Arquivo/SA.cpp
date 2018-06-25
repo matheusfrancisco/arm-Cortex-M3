@@ -226,7 +226,28 @@ int meu_feof (MEU_FILE *A)
 }
 
 
+/**
+ * meu_ftell() - Get current position in stream
+ *
+ * @description
+ * 		Returns the current value of the position indicator of the stream.
+ * 		For binary streams, this is the number of bytes from the beginning of the file.
+ * 		For text streams, the numerical value may not be meaningful but can still be used to
+ * 		restore the position to the same position later using fseek (if there are characters
+ * 		put back using ungetc still pending of being read, the behavior is undefined).
+ *
+ * @param
+ * 		stream: Pointer to a FILE object that identifies the stream.
+ * @return
+ * 		On success, the current value of the position indicator is returned.
+ * 		On failure, -1L is returned, and errno is set to a system-specific positive value.
+ */
+void meu_ftell(MEU_FILE *A)
+{
+    return (A == NULL) ? INVALIDO : stream->posicao;
+}
 
+/**/
 int meu_fgetc( MEU_FILE *A )
 {
 	struct inodo lida;
@@ -277,6 +298,7 @@ int meu_fgetc( MEU_FILE *A )
 	A->posicao++;
 	return valor;
 }
+
 
 
 uint16_t le_cabecalho ()

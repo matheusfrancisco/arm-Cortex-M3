@@ -67,6 +67,7 @@ void formata (void);
 MEU_FILE * meu_fopen (const char *st, const char *modo);
 int meu_fclose(MEU_FILE *A);
 
+/*Funções de manipulação de arquivo*/
 /*Passa o bit e o arquivo a ser escrito*/
 void meu_fputc ( uint8_t valor , MEU_FILE *A );
 
