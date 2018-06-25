@@ -11,9 +11,9 @@
 
 Implementações de bibliotecas para utilizar o kit arm cortex M3. As
 implementações realizadas aqui foram feitas jutnamente com o professor
-<a href="https://github.com/fabiorochaufsc/>"Fabio de la Rocha</a>
+<a href="https://github.com/fabiorochaufsc/">Fabio de la Rocha</a>
 
-<img src="placa.jpeg" width="500" height="500" />
+<img src="placa.jpeg" width="500" height="350" />
 
 ### Bibliotecas desenvolvidas
 ##### Digital
@@ -32,6 +32,7 @@ As seguintes implementações foram realizadas
 ##### Interrupção
 ##### Teclado
 ##### i2c Software
+##### Deselvovimento Sistema de Arquivo
 
 
 
