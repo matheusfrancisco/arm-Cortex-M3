@@ -92,14 +92,41 @@ MEU_FILE * meu_fopen (const char *st, const char *modo)
 		meu_inodo.status = 1;
 		meu_inodo.tam=0;
 		strcpy(meu_inodo.nome,st);
-		meu_inodo.indireto=0xffff;
+		/*cria um inodo novo e marca como ocupado*/
+		meu_inodo.indireto=0xffff; 
+		/*grava na memoria*/
 		escreve_entrada( livre , meu_inodo );		
-	
+		
+		//aloca o arquvio que será retornado, arquivo != inodo.
 		tmp  = (MEU_FILE *) malloc (sizeof(MEU_FILE));
 		tmp->id = livre;
 		tmp->posicao = 0;
 		
 		
+	}
+	else if (strcmp(modo, "r+") ==0){
+		/*Implementar modo r+*/
+		int livre =-1; /*Se for modo r+*/
+		/*procuramos a entrada desejada*/
+		for (int x  =0; x< 12; x++)
+		{
+			leia_entrada(x,&meu_inodo);
+			if (struct(meu_inodo.nome, st)==0)
+			{
+				livre=x;
+				 break;
+			}
+		}
+		/*Fazer retornar NULL se não existir o arquivo*/
+		if(livre==-1){
+			return NULL;
+		}
+		/*se existir, retorna o arquivo.*/
+		else{
+			tmp = (MEU_FILE *) malloc (sizeof(MEU_FILE));
+			tmp->id = livre;
+			tmp->posicao = 0;
+		}
 	}
 	return tmp;
 }
