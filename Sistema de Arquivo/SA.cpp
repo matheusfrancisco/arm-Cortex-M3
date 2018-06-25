@@ -57,15 +57,15 @@ void escreve_entrada( uint16_t numero , struct inodo tmp)
  * MEU_fopen() - Open file
  *
  * @description
- * 		Opens the file whose name is the string pointed to by path and associates a stream with it.
+ * 		Opens the file whose name is the string pointed to by path and associates a file with it.
  *
  * 		The argument mode points to a string beginning with one of the following sequences
  * 		(possibly followed by additional characters, as described below):
  *
- * 	r	Open  for reading.  The stream is positioned at the
+ * 	r	Open  for reading.  The file is positioned at the
  *              beginning of the file.
  * 	w       Open  for  reading and writing.  The file is created if it does
- *              not exist, otherwise it is truncated.  The stream is positioned
+ *              not exist, otherwise it is truncated.  The file is positioned
  *              at the beginning of the file.
  * @param
  * 		nome:	Filename
@@ -150,6 +150,7 @@ MEU_FILE * meu_fopen (const char *st, const char *modo)
 	return tmp;
 }
 
+
 /**
  * MEU_fclose() - Close File
  *
@@ -199,7 +200,7 @@ void meu_fseek ( MEU_FILE *A, uint16_t offset )
 tamanho é o tamanho de cada item, e 
 count é a quantidade a ser escrita
 **/
-uint16_t meu_fwrite( void *buffer, uint16_t tamanho, uint16_t count, MEU_FILE *stream)
+uint16_t meu_fwrite( void *buffer, uint16_t tamanho, uint16_t count, MEU_FILE *A)
 {
 
     uint16_t qn_esccrito = 0; // é a quantidade de itens que vai ser lido 
@@ -302,6 +303,27 @@ return qn_esccrito;
 }
 	
 	
+uint16_t meu_fread(void * buffer, uint16_t tamanho, uint16_t count, MEU_FILE *A)
+{
+    uint16_t qn_esccrito = 0; // é a quantidade de itens que vai ser lido 
+    uint16_t qtd_escrever = tamanho * count;
+	uint8_t P_MEUFILE = A->posicao;//
+	uint16_t id = A->id;
+	uint16_t n;
+	/** Para lembrar essa struct eu consigo acessar direto e indireto
+	char status;
+	char nome[8];
+	bloco_dados dados_diretos;
+	uint16_t indireto;
+	uint16_t tam;
+	**/
+    struct inodo inodo_lida; 
+
+	bloco_dados bloco_idx;
+	bloco_dados bloco;
+
+
+}
 
 
 
@@ -336,24 +358,24 @@ int meu_feof (MEU_FILE *A)
 }
 
 /**
- * meu_ftell() - Get current position in stream
+ * meu_ftell() - Get current position in file
  *
  * @description
- * 		Returns the current value of the position indicator of the stream.
- * 		For binary streams, this is the number of bytes from the beginning of the file.
- * 		For text streams, the numerical value may not be meaningful but can still be used to
+ * 		Returns the current value of the position indicator of the file.
+ * 		For binary files, this is the number of bytes from the beginning of the file.
+ * 		For text files, the numerical value may not be meaningful but can still be used to
  * 		restore the position to the same position later using fseek (if there are characters
  * 		put back using ungetc still pending of being read, the behavior is undefined).
  *
  * @param
- * 		stream: Pointer to a FILE object that identifies the stream.
+ * 		file: Pointer to a FILE object that identifies the file.
  * @return
  * 		On success, the current value of the position indicator is returned.
  * 		On failure, -1L is returned, and errno is set to a system-specific positive value.
  */
 void meu_ftell(MEU_FILE *A)
 {
-    return (A == NULL) ? INVALIDO : stream->posicao;
+    return (A == NULL) ? INVALIDO : A->posicao;
 }
 
 
