@@ -1,0 +1,13 @@
+#ifndef __DHT11__
+#define __DHT11__
+#include <inttypes.h>
+
+class __DHT__ {
+
+	void start (void);
+	Uint8_t leTemperatura(void);
+	
+};
+
+#endif
+
