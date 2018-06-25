@@ -3,12 +3,13 @@
 
 
 ### Nome dos Alunos 
-Nome: Matheus Francisco Batista Machado
-Nome: Luan Rodrigues
-Nome: Morgana Sartor
-Nome: Marcelly Homem Coelho
+
+* Matheus Francisco Batista Machado
+* Luan Rodrigues
+* Morgana Sartor
+* Marcelly Homem Coelho
 
 
 Essse repositorio contém implementações de biblioteca para utilizar o kit arm cortex M3
 
-![](./placa.jpeg =100x20)
+![](./placa.jpeg=100x20)
