@@ -52,8 +52,27 @@ void escreve_entrada( uint16_t numero , struct inodo tmp)
 	memoria.write(posicao, sizeof(struct inodo), (uint8_t *)&tmp);
 }
 	
-
-
+/*Inicio da leitura e escrita*/
+/**
+ * MEU_fopen() - Open file
+ *
+ * @description
+ * 		Opens the file whose name is the string pointed to by path and associates a stream with it.
+ *
+ * 		The argument mode points to a string beginning with one of the following sequences
+ * 		(possibly followed by additional characters, as described below):
+ *
+ * 	r	Open  for reading.  The stream is positioned at the
+ *              beginning of the file.
+ * 	w       Open  for  reading and writing.  The file is created if it does
+ *              not exist, otherwise it is truncated.  The stream is positioned
+ *              at the beginning of the file.
+ * @param
+ * 		nome:	Filename
+ * 		modo:   Operation mode
+ * @return
+ * 		Return the character written as an unsigned char cast to an int or EOF on error
+ */
 MEU_FILE * meu_fopen (const char *st, const char *modo)
 {
 	MEU_FILE * tmp = NULL;
@@ -130,6 +149,31 @@ MEU_FILE * meu_fopen (const char *st, const char *modo)
 	}
 	return tmp;
 }
+
+/**
+ * MEU_fclose() - Close File
+ *
+ * @description
+ * 		
+ *
+ *
+ * @param
+ *
+ * @return
+ *
+ */
+int meu_fclose(MEU_FILE *A)
+{
+	if(A == NULL){
+		return 1;
+	}
+	/*Acho que funciona faz uns testes ai bundão*/
+	free(&A);
+	return 0;
+
+}
+
+/*FIM da abertura  e fechamento*/
 
 /*Inicio do Cabeçalho*/
 

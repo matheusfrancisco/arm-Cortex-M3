@@ -63,9 +63,9 @@ void formata (void);
 /*END Feitas em sala de aula*/
 
 
-/**/
-
+/*Abertura e fechamento de arquivo*/
 MEU_FILE * meu_fopen (const char *st, const char *modo);
+int meu_fclose(MEU_FILE *A);
 
 /*Passa o bit e o arquivo a ser escrito*/
 void meu_fputc ( uint8_t valor , MEU_FILE *A );
@@ -76,7 +76,7 @@ void meu_fseek ( MEU_FILE *A, uint16_t offset );
 int meu_fgetc( MEU_FILE *A );
 /**/
 int meu_feof (MEU_FILE *A);
-
+ 
 
 /*Função formata SA*/
 void meu_fomartar();
