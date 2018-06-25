@@ -5,22 +5,35 @@
 
 #pragma pack(1)
 
-#define TAM_MEMORIA 8192
-#define QTD_ENTRADAS 12
-#define TAM_BLOCO_PONTEIRO 2
+#define TAM_MEMORIA 8192 /*Tamanho da memória*/
+#define QTD_ENTRADAS 12 /*quantidade arquivos com máximo de tamanho 17*32 = 544Bytes de dados*/
+#define TAM_BLOCO_PONTEIRO 2 /* Lista para apontar para um quadradinho de 2Bytes*/
+
+// Implementado 
+#define TAM_ENTRADA (sizeof(struct inodo)) // é o tamanho do inodo
+#define INICIO_PONTEIROS ((TAM_BLOCO_PONTEIRO)+QTD_ENTRADAS*TAM_ENTRADA) //define a posição da memória que começa a lista de blocos (ponteiros)
+ //é o tamanho do vetor quando se lê um bloco de dados
+#define TAMANHO_BLOCO_DADOS 32
+//é o tamanho do vetor quando se lê um bloco de endereços 
+#define TAMANHO_BLOCO_INDICES 16 
+#define TAM_ENTRADA (sizeof(struct inodo))
+ //define a posição da memória que começa a lista de blocos (dos dados)
+#define INICIO_PONTEIROS ((TAM_BLOCO_PONTEIRO)+QTD_ENTRADAS*TAM_ENTRADA) 
+//define a posição da memória que começa a lista de blocos (dos dados)
+#define INICIO_DADOS (INICIO_PONTEIROS + 225*TAM_BLOCO_PONTEIRO)
 
 
 
 
 typedef struct {
 	uint16_t id;
-	uint16_t posicao; 
-	
+	uint16_t posicao; // posição dentro do arquivo
+	char modo;
 }MEU_FILE;
 
-typedef uint8_t  bloco_dados[32];
+typedef uint8_t  bloco_dados[TAMANHO_BLOCO_DADOS];
 
-typedef uint16_t  bloco_indice[16];
+typedef uint16_t  bloco_indice[TAMANHO_BLOCO_INDICES];
 
 struct inodo {
 	char status;
@@ -30,13 +43,26 @@ struct inodo {
 	uint16_t tam;
 };
 
-#define TAM_ENTRADA (sizeof(struct inodo))
+/**/
+uint16_t aloca (void);
+void le_entrada_arquivo (uint16_t numero, 	struct inodo *tmp);
+void escreve_entrada( uint16_t numero , struct inodo tmp);
+void escreve_cabecalho (uint16_t numero);;
+uint16_t le_cabecalho ();
+void leia_entrada (uint8_t numero, struct inodo *i);
+void escreva_entrada (uint8_t numero, struct inodo *i);
+void cria_entrada (uint8_t numero);
+void escreva_bloco_ponteiro(uint16_t numero, uint16_t valor);
+void leia_bloco_ponteiro(uint16_t numero, uint16_t *valor);
+void escreva_bloco_dados(uint16_t numero ,uint8_t *valor);
+void leia_bloco_dados(uint16_t numero ,uint8_t *valor);
+void cria_blocos_livres();
+void cria_blocos_dados();
+void formata (void);
 
-#define INICIO_PONTEIROS ((TAM_BLOCO_PONTEIRO)+QTD_ENTRADAS*TAM_ENTRADA)
-
-#define INICIO_DADOS (INICIO_PONTEIROS + 225*TAM_BLOCO_PONTEIRO)
 
 
+//END
 
 void formata (void);
 MEU_FILE * meu_fopen (const char *st, const char *modo);

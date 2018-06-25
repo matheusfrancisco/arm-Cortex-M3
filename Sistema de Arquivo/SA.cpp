@@ -27,7 +27,13 @@ void escreve_entrada( uint16_t numero , struct inodo tmp)
 MEU_FILE * meu_fopen (const char *st, const char *modo)
 {
 	MEU_FILE * tmp = NULL;
+	
 	struct inodo meu_inodo;
+	uint8_t id;
+	uint8_t mark;
+	/*Tenta abrir ou criar o arquivo
+	se conseguir alocar com malloc retorna
+	se não retorna NULL*/
 	if (strcmp(modo, "w")==0)
 	{
 		int livre = -1;
