@@ -175,7 +175,7 @@ int meu_fclose(MEU_FILE *A)
 
 /*FIM da abertura  e fechamento*/
 
-/*Inicio do Cabeçalho*/
+
 
 /** Inicio da manipulação de Arquivo **/
 /**
@@ -225,7 +225,6 @@ int meu_feof (MEU_FILE *A)
 	
 }
 
-
 /**
  * meu_ftell() - Get current position in stream
  *
@@ -247,7 +246,7 @@ void meu_ftell(MEU_FILE *A)
     return (A == NULL) ? INVALIDO : stream->posicao;
 }
 
-/**/
+
 int meu_fgetc( MEU_FILE *A )
 {
 	struct inodo lida;
@@ -299,41 +298,9 @@ int meu_fgetc( MEU_FILE *A )
 	return valor;
 }
 
+/** FIM da manipulação de Arquivo **/
 
-
-uint16_t le_cabecalho ()
-{
-	/*retorna o valor do cabeçalho 
-	Quer dizer o valor do próximo bloco disponivel para alocação*/
-	uint16_t numero;
-	memoria.read(0, 2, (uint8_t *) &numero);
-	return numero;
-}
-void escreve_cabecalho (uint16_t numero)
-{
-	/*/grava o numero do proximo bloco disponível no cabeçalho.*/
-	memoria.write(0, 2, (uint8_t *) &numero);
-}
-
-/*Fim do Cabeçalho*/
-
-void leia_entrada (uint8_t numero, struct inodo *i)
-{
-	/* pula o cabecalho (2) e faz o numero da entrada vezes o
-	 tamanho, isso retorna a posição na memória da entrada.*/
-	uint16_t posicao = 2 + numero*sizeof(struct inodo);
-	memoria.read(posicao, sizeof(struct inodo), (uint8_t *)i);  //le a entrada
-}
-
-void escreva_entrada (uint8_t numero, struct inodo *i)
-{
-	/* pula o cabecalho (2) e faz o numero da entrada vezes o
-	 tamanho, isso retorna a posição na memória da entrada.*/
-	uint16_t posicao = 2 + numero*sizeof(struct inodo);
-	memoria.write(posicao, sizeof(struct inodo), (uint8_t *)i);// grava a entrada
-}
-
-
+/*Escrita e Leitura de Arquivo*/
 /**
  * MEU_fputc() - 
  *
@@ -410,6 +377,41 @@ void meu_fputc ( uint8_t valor , MEU_FILE *A )
 	escreva_entrada(id, &lida);
 	
 }
+/*FIM Escrita e Leitura de Arquivo*/
+
+uint16_t le_cabecalho ()
+{
+	/*retorna o valor do cabeçalho 
+	Quer dizer o valor do próximo bloco disponivel para alocação*/
+	uint16_t numero;
+	memoria.read(0, 2, (uint8_t *) &numero);
+	return numero;
+}
+void escreve_cabecalho (uint16_t numero)
+{
+	/*/grava o numero do proximo bloco disponível no cabeçalho.*/
+	memoria.write(0, 2, (uint8_t *) &numero);
+}
+
+/*Fim do Cabeçalho*/
+
+void leia_entrada (uint8_t numero, struct inodo *i)
+{
+	/* pula o cabecalho (2) e faz o numero da entrada vezes o
+	 tamanho, isso retorna a posição na memória da entrada.*/
+	uint16_t posicao = 2 + numero*sizeof(struct inodo);
+	memoria.read(posicao, sizeof(struct inodo), (uint8_t *)i);  //le a entrada
+}
+
+void escreva_entrada (uint8_t numero, struct inodo *i)
+{
+	/* pula o cabecalho (2) e faz o numero da entrada vezes o
+	 tamanho, isso retorna a posição na memória da entrada.*/
+	uint16_t posicao = 2 + numero*sizeof(struct inodo);
+	memoria.write(posicao, sizeof(struct inodo), (uint8_t *)i);// grava a entrada
+}
+
+
 
 void cria_entrada (uint8_t numero)
 {
