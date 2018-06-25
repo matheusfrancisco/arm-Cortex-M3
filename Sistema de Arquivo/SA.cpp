@@ -7,9 +7,10 @@
 #include <stdio.h>
 
 
-uint16_t aloca (void);
-void escreva_bloco_dados(uint16_t numero ,uint8_t *valor);
-void leia_bloco_dados(uint16_t numero, uint8_t *valor);
+//uint16_t aloca (void);
+//void escreva_bloco_dados(uint16_t numero ,uint8_t *valor);
+
+//void leia_bloco_dados(uint16_t numero, uint8_t *valor);
 
 void le_entrada_arquivo (uint16_t numero, 	struct inodo *tmp)
 {
@@ -62,27 +63,38 @@ MEU_FILE * meu_fopen (const char *st, const char *modo)
 	return tmp;
 }
 
+/*Inicio do Cabeçalho*/
 
 uint16_t le_cabecalho ()
 {
+	/*retorna o valor do cabeçalho 
+	Quer dizer o valor do próximo bloco disponivel para alocação*/
 	uint16_t numero;
 	memoria.read(0, 2, (uint8_t *) &numero);
 	return numero;
 }
 void escreve_cabecalho (uint16_t numero)
 {
+	/*/grava o numero do proximo bloco disponível no cabeçalho.*/
 	memoria.write(0, 2, (uint8_t *) &numero);
 }
+
+/*Fim do Cabeçalho*/
+
 void leia_entrada (uint8_t numero, struct inodo *i)
 {
+	/* pula o cabecalho (2) e faz o numero da entrada vezes o
+	 tamanho, isso retorna a posição na memória da entrada.*/
 	uint16_t posicao = 2 + numero*sizeof(struct inodo);
-	memoria.read(posicao, sizeof(struct inodo), (uint8_t *)i);
+	memoria.read(posicao, sizeof(struct inodo), (uint8_t *)i);  //le a entrada
 }
 
 void escreva_entrada (uint8_t numero, struct inodo *i)
 {
+	/* pula o cabecalho (2) e faz o numero da entrada vezes o
+	 tamanho, isso retorna a posição na memória da entrada.*/
 	uint16_t posicao = 2 + numero*sizeof(struct inodo);
-	memoria.write(posicao, sizeof(struct inodo), (uint8_t *)i);
+	memoria.write(posicao, sizeof(struct inodo), (uint8_t *)i);// grava a entrada
 }
 
 void meu_fseek ( MEU_FILE *A, uint16_t offset )
@@ -210,27 +222,52 @@ void meu_fputc ( uint8_t valor , MEU_FILE *A )
 
 void cria_entrada (uint8_t numero)
 {
-	struct inodo tmp;
-	tmp.status = 0;
+
+	struct inodo tmp;	//Cria lista
+	tmp.status = 0; // define seus valores padrões como 0
 	tmp.tam=0;
-	strcpy(tmp.nome,"VAZIO");
+	strcpy(tmp.nome,"VAZIO"); // Nome fica vazio
 	tmp.indireto=0xFFFF;
-	for (int a=0;a<32;a++) tmp.dados_diretos[a]=0;
-	
+	for (int a=0;a<32;a++) tmp.dados_diretos[a]=0;// zera os dados diretos
+	/*pula o cabecalho (2) e faz o numero da entrada vezes o tamanho,
+	 isso retorna a posição na memória da entrada.*/
 	uint16_t posicao = 2 + numero*sizeof(struct inodo);
-	memoria.write(posicao, sizeof(struct inodo), (uint8_t *)&tmp);
+	memoria.write(posicao, sizeof(struct inodo), (uint8_t *)&tmp); //grava na memoria
 	
 }
+/*Inicio Bloco de ponteiros*/
+void cria_blocos_livres()
+{
+	/*bloco livre 
+	lista de blocos para alocação*/
+	for (int x=0;x<224;x++)
+		/*para cada lista, fizemos cada bloco i, receer i+1*/
+		escreva_bloco_ponteiro(x, x+1);
+		/*Os blocos da lista tem um ponteiro seg (next->)
+		para o proximo da lista caso estivermos no ultimo bloco
+		marcamos  o next como inválido*/
+	escreva_bloco_ponteiro(224, 0xFFFF);
+}
+
 void escreva_bloco_ponteiro(uint16_t numero, uint16_t valor)
 {
+	/*calcula a posição na memoria 
+	do bloco para alocação (ponteiro) (da lista) em questão*/
 	uint16_t endereco = numero * 2 + INICIO_PONTEIROS; 
 	memoria.write(endereco, 2, (uint8_t *)&valor);
 }
 void leia_bloco_ponteiro(uint16_t numero, uint16_t *valor)
 {
+	/*calcula a posição na memoria 
+	do bloco para alocação (ponteiro) (da lista) em questão*/
 	uint16_t endereco = numero * 2 + INICIO_PONTEIROS; 
 	memoria.read(endereco, 2, (uint8_t *)valor);
 }
+
+/*Fim dos Bloco de ponteiros*/
+
+
+/*Inicio dos blocos de dados*/
 uint16_t aloca (void)
 {
 	bloco_indice  bloco_idx;
@@ -261,13 +298,7 @@ void leia_bloco_dados(uint16_t numero ,uint8_t *valor)
 		memoria.read(endereco, sizeof(bloco_dados),  valor);
 }
 
-void cria_blocos_livres()
-{
-	for (int x=0;x<224;x++)
-		escreva_bloco_ponteiro(x, x+1);
-	
-	escreva_bloco_ponteiro(224, 0xFFFF);
-}
+
 
 void cria_blocos_dados()
 {
@@ -280,8 +311,14 @@ void cria_blocos_dados()
 	
 
 }
+
+
 void formata (void)
 {
+
+	/*pra formatar escrevemos o cabecalho como
+	0 e criamos as 12 entradas, depois cria a 
+	lista de bloco (ponteiros), e depois os blocos de dados */
 	memoria.init();
 	escreve_cabecalho(0);
 	for (int x=0;x<12;x++) cria_entrada(x);
