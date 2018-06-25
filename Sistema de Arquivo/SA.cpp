@@ -9,8 +9,37 @@
 
 //uint16_t aloca (void);
 //void escreva_bloco_dados(uint16_t numero ,uint8_t *valor);
-
 //void leia_bloco_dados(uint16_t numero, uint8_t *valor);
+
+
+
+/**
+ * MEU_format() - Format de filesystem
+ *
+ * @description
+ * 		Formats the entire filesystem
+ * @param
+ *
+ * @return
+ *
+ */
+void formata (void)
+{
+
+	/*pra formatar escrevemos o cabecalho como
+	0 e criamos as 12 entradas, depois cria a 
+	lista de bloco (ponteiros), e depois os blocos de dados */
+	memoria.init();
+	escreve_cabecalho(0);
+	for (int x=0;x<12;x++) cria_entrada(x);
+	cria_blocos_livres();
+	
+	cria_blocos_dados();
+	
+}
+
+
+
 
 void le_entrada_arquivo (uint16_t numero, 	struct inodo *tmp)
 {
@@ -168,6 +197,18 @@ int meu_feof (MEU_FILE *A)
 	
 }
 
+/**
+ * MEU_fputc() - 
+ *
+ * @description
+ * 		Writes the byte c.
+ *		escreve um byte.
+ * @param
+ * 		Passa o arquivo e o valor
+ * 		ile and to value
+ * @return
+ * 	
+ */
 void meu_fputc ( uint8_t valor , MEU_FILE *A )
 {
 	struct inodo lida;
@@ -185,37 +226,50 @@ void meu_fputc ( uint8_t valor , MEU_FILE *A )
 
 	if (posicao < 32)
 	{
+	/*se a posição corrente for < 32 
+	o valor a ser escrito é no dado direto*/
 		lida.dados_diretos[posicao] = valor;
 		
 	}
 	else  
 	{	
+		/*Se não é em indireto*/
 		if (lida.indireto==0xFFFF) 
 		{
+			/*caso não foi alocado, devemos alocar o indireto*/
 			lida.indireto = aloca ();
 		}
+		/*Calcula deslocamento e entrada corrente*/
 		uint16_t numero_entrada = posicao / 32;
 		uint8_t deslocamento    = posicao % 32;
 		numero_entrada--;
 		
 		
 		leia_bloco_dados (lida.indireto, (uint8_t *) &bloco_idx);
+		/*Caso a entrada não esteja alocada temos que alocar ela*/
 		if (bloco_idx[numero_entrada]==0xffff)
 		{
+			/*le a entra em questão*/
 			bloco_idx[numero_entrada] = aloca();
+			/*marca o bloco*/
 			escreva_bloco_dados(lida.indireto , (uint8_t *) bloco_idx);
 		}
+		/*le o bloco de dados*/
 		leia_bloco_dados (lida.indireto, (uint8_t *) &bloco_idx);
+		/*bloco da entrada*/
 		n = bloco_idx[numero_entrada];
 		
-		leia_bloco_dados (n, (uint8_t *) &bloco);
+		leia_bloco_dados (n, (uint8_t *) &bloco);//vai ler o  bloco
 		bloco[deslocamento] = valor;
 		escreva_bloco_dados(n ,  (uint8_t *) &bloco);
 		 
 		
 	}
+	/*Aqui esta incrmentando o tamanho*/
 	if (A->posicao >= lida.tam) lida.tam++;
+	/*Aqui esta incrementando a posição*/
 	A->posicao++;
+	/*Aqui reescreve a entrada*/
 	escreva_entrada(id, &lida);
 	
 }
@@ -274,30 +328,23 @@ uint16_t aloca (void)
 	 
 	uint16_t lido;
 	uint16_t  novo_bloco = le_cabecalho();
+	// le o bloco de dados no lido
 	
 	leia_bloco_ponteiro(novo_bloco, &lido);
+	
+	//escreve no cabecalho o next do bloco
 	
 	escreve_cabecalho (lido);
 	
 	leia_bloco_dados (novo_bloco, (uint8_t *) &bloco_idx);
-	for (int x=0;x<16;x++) bloco_idx[x]=0xffff;
-	escreva_bloco_dados(novo_bloco, (uint8_t *) &bloco_idx);
+	for (int x=0;x<16;x++) //marca todos os valores do blcoo como invalido 
+		bloco_idx[x]=0xffff;
+	escreva_bloco_dados(novo_bloco, (uint8_t *) &bloco_idx);//escreve o bloco novamente
+
 	
 	
 	return novo_bloco;
 }
-void escreva_bloco_dados(uint16_t numero ,uint8_t *valor)
-{
-		uint16_t endereco = numero * sizeof(bloco_dados) + INICIO_DADOS; 
-		memoria.write(endereco,  sizeof(bloco_dados),  valor);
-}
-
-void leia_bloco_dados(uint16_t numero ,uint8_t *valor)
-{
-		uint16_t endereco = numero * sizeof(bloco_dados) + INICIO_DADOS; 
-		memoria.read(endereco, sizeof(bloco_dados),  valor);
-}
-
 
 
 void cria_blocos_dados()
@@ -312,20 +359,18 @@ void cria_blocos_dados()
 
 }
 
-
-void formata (void)
+void escreva_bloco_dados(uint16_t numero ,uint8_t *valor)
 {
-
-	/*pra formatar escrevemos o cabecalho como
-	0 e criamos as 12 entradas, depois cria a 
-	lista de bloco (ponteiros), e depois os blocos de dados */
-	memoria.init();
-	escreve_cabecalho(0);
-	for (int x=0;x<12;x++) cria_entrada(x);
-	cria_blocos_livres();
-	
-	cria_blocos_dados();
-	
+		uint16_t endereco = numero * sizeof(bloco_dados) + INICIO_DADOS; 
+		memoria.write(endereco,  sizeof(bloco_dados),  valor);
 }
+
+void leia_bloco_dados(uint16_t numero ,uint8_t *valor)
+{
+		uint16_t endereco = numero * sizeof(bloco_dados) + INICIO_DADOS; 
+		memoria.read(endereco, sizeof(bloco_dados),  valor);
+}
+
+/*Fim dos blocos de dados*/
 
 

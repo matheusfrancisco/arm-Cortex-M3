@@ -43,7 +43,7 @@ struct inodo {
 	uint16_t tam;
 };
 
-/**/
+/*Feitas em sala de aula*/
 uint16_t aloca (void);
 void le_entrada_arquivo (uint16_t numero, 	struct inodo *tmp);
 void escreve_entrada( uint16_t numero , struct inodo tmp);
@@ -60,15 +60,29 @@ void cria_blocos_livres();
 void cria_blocos_dados();
 void formata (void);
 
+/*END Feitas em sala de aula*/
 
 
-//END
+/**/
 
-void formata (void);
 MEU_FILE * meu_fopen (const char *st, const char *modo);
+
+/*Passa o bit e o arquivo a ser escrito*/
 void meu_fputc ( uint8_t valor , MEU_FILE *A );
+
+/**/
 void meu_fseek ( MEU_FILE *A, uint16_t offset );
+/**/
 int meu_fgetc( MEU_FILE *A );
+/**/
 int meu_feof (MEU_FILE *A);
+
+
+/*Função formata SA*/
+void meu_fomartar();
+
+
+
+
 
 #endif
