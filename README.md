@@ -11,5 +11,5 @@
 
 
 Essse repositorio contém implementações de biblioteca para utilizar o kit arm cortex M3
-
-![](./placa.jpeg=100x20)
+<img src="placa.jpeg" width="200" height="400" />
+![](./placa.jpeg =200x200)
