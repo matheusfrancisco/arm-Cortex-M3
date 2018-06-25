@@ -59,8 +59,7 @@ MEU_FILE * meu_fopen (const char *st, const char *modo)
 	MEU_FILE * tmp = NULL;
 	
 	struct inodo meu_inodo;
-	uint8_t id;
-	uint8_t mark;
+	
 	/*Tenta abrir ou criar o arquivo
 	se conseguir alocar com malloc retorna
 	se não retorna NULL*/
@@ -69,14 +68,27 @@ MEU_FILE * meu_fopen (const char *st, const char *modo)
 		int livre = -1;
 		for (int x=0;x<12;x++)
 		{
+			
 			le_entrada_arquivo(x, &meu_inodo);
+			
+			/* se o inodo lido estive desocupado, 
+			e a var livre for -1 marca essa posição
+			 como a posição para criar o arquivo.*/
+
 			if ((meu_inodo.status==0) && (livre==-1)) livre = x;
 			if (strcmp(meu_inodo.nome, st)==0)
 			{
 					// trabalho pois precisa desalocar blocos
+				remove_entrada(x);
+				/** Se não achar entrada livre
+				vamos colcoar o mesmo nome na entrada*/
+				if(livre == -1)
+					livre =x;
 					
 			}
 		}
+		/*Falta fazer se não tiver nenhuma vamos retornar nulo */
+
 		meu_inodo.status = 1;
 		meu_inodo.tam=0;
 		strcpy(meu_inodo.nome,st);
