@@ -6,7 +6,7 @@ int main (void)
 
 	formata();
 	
-	MEU_FILE *A, *B;
+	MEU_FILE *A, *B, *C;
 	
 	A = meu_fopen ("teste","w");
 	if (A==NULL)
@@ -27,13 +27,30 @@ int main (void)
 		meu_fputc('C',B);
 			meu_fseek(A, 33);
 			printf("Lido = %c\n", meu_fgetc(A));
-	meu_fseek(A, 0);	
+	meu_fseek(A, 0);
+
+
 	while (!meu_feof(A))
 	{
 		printf("%c",meu_fgetc(A));
 	}
-		
+	printf("\n\n");
+
+	//uint16_t meu_fwrite(MEU_FILE *A, void * buffer, uint16_t tamanho, uint16_t count)
+	C = meu_fopen("arquivao", "w");
 	
-	
+	if(C==NULL) printf("Erro");
+
+	char a[90];
+	strcpy(a,"HHHHHHHHhhahahahhaha");
+
+	//meu_fwrite(C, a, sizeof(char), strlen(a));
+
+	meu_fseek(C,0);
+
+	while (!meu_feof(C))
+	{
+		printf("%c",meu_fgetc(C));
+	}
 	
 }

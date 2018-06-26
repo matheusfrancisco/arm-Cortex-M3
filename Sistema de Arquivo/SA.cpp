@@ -51,6 +51,26 @@ void escreve_entrada( uint16_t numero , struct inodo tmp)
 	uint16_t posicao = 2 + numero*sizeof(struct inodo);
 	memoria.write(posicao, sizeof(struct inodo), (uint8_t *)&tmp);
 }
+
+void remove_entrada( uint16_t id )
+{
+	struct inodo aux;
+	//memoria.read();
+	le_entrada_arquivo(id, &aux);
+
+
+	uint16_t ponteiros_indireto = aux.indireto;
+	if(ponteiros_indireto == 0xffff)
+	{
+
+		for(int i = 0; i < ) {
+		
+		}
+	}
+	// cria novo bloco limpo
+	cria_entrada(id);
+}
+
 	
 /*Inicio da leitura e escrita*/
 /**
@@ -99,6 +119,7 @@ MEU_FILE * meu_fopen (const char *st, const char *modo)
 			{
 					// trabalho pois precisa desalocar blocos
 				remove_entrada(x);
+				
 				/** Se não achar entrada livre
 				vamos colcoar o mesmo nome na entrada*/
 				if(livre == -1)
@@ -200,12 +221,13 @@ void meu_fseek ( MEU_FILE *A, uint16_t offset )
 tamanho é o tamanho de cada item, e 
 count é a quantidade a ser escrita
 **/
-uint16_t meu_fwrite( void *buffer, uint16_t tamanho, uint16_t count, MEU_FILE *A)
-{
+uint16_t meu_fwrite(MEU_FILE *A, void * buffer, uint16_t tamanho, uint16_t count) {
 
-    uint16_t qn_esccrito = 0; // é a quantidade de itens que vai ser lido 
+    uint16_t qn_esccrito = 0; // é a quantidade de itens que vai ser lido
+
+    // quantidade de bytes que falta escrever 
     uint16_t qtd_escrever = tamanho * count;
-	uint8_t P_MEUFILE = A->posicao;//
+	//uint8_t P_MEUFILE = A->posicao;//
 	uint16_t id = A->id;
 	uint16_t n;
 	/** Para lembrar essa struct eu consigo acessar direto e indireto
@@ -222,7 +244,6 @@ uint16_t meu_fwrite( void *buffer, uint16_t tamanho, uint16_t count, MEU_FILE *A
 
 	if(buffer == NULL || A == NULL)
 	{
-
 		//ERRROOO
 		return -2; 
 	}
@@ -234,72 +255,93 @@ uint16_t meu_fwrite( void *buffer, uint16_t tamanho, uint16_t count, MEU_FILE *A
 		return 0;
 	}
 	leia_entrada(id, &inodo_lida);// le a entrada do arquivo em questão
-		if (posicao < 32)
+	
+	if (A->posicao < 32)
 	{
 		/*TEM quer fazer um for 
 		que a quantidade escrita vai ser menor que a posicao menos 32
 		e a quantidade que vai escrever tem que ser maior que zero*/
+		while(qn_esccrito <  A->posicao && qtd_escrever > 0) {
+			
+			// aloca no bloco direto a posicao do buffer
+			inodo_lida.dados_diretos[A->posicao] = buffer[qn_esccrito];
+			qn_esccrito++;
+			// decrementa 1 byte
+			qtd_escrever--;
+		}
 		
 	}
-	
+
+
 	/*se for ler ainda e tem q verificar se tem algo no indireto e alocar*/  
+	// verifica se chegou no final e tem algo p escrever
 	if (inodo_lida.indireto==0xFFFF && qtd_escrever >0) 
 		{
 			/*caso não foi alocado, devemos alocar o indireto*/
 			inodo_lida.indireto = aloca ();
 		}
-		/*Calcula deslocamento e entrada corrente*/
-		// dos blocos de endereço seja a inicial
-		uint16_t numero_entrada = (A->posicao / 32);
-		// calcula o deslocamento caso a poosição 
-		uint8_t deslocamento    = A->posicao % 32;
 		
+	/*Calcula deslocamento e entrada corrente*/
+	// dos blocos de endereço seja a inicial
+	uint16_t numero_entrada = (A->posicao / 32);
+	// calcula o deslocamento caso a poosição 
+	uint8_t deslocamento    = A->posicao % 32;
+	
 		
-		leia_bloco_dados (inodo_lida.indireto, (uint8_t *) &bloco_idx);
-		/*Caso a entrada não esteja alocada temos que alocar ela*/
-		if (bloco_idx[numero_entrada]==0xffff)
+	leia_bloco_dados (inodo_lida.indireto, (uint8_t *) &bloco_idx);
+	/*Caso a entrada não esteja alocada temos que alocar ela*/
+	if (bloco_idx[numero_entrada]==0xffff)
+	{
+		/*le a entra em questão*/
+		bloco_idx[numero_entrada] = aloca();
+		/*marca o bloco*/
+		escreva_bloco_dados(lida.indireto , (uint8_t *) bloco_idx);
+	}
+	/*le o bloco de dados*/
+	leia_bloco_dados (lida.indireto, (uint8_t *) &bloco_idx);
+	/*bloco da entrada*/
+	//enquanto tiver coisa pra escrever e tiver endereço no bloco
+	// cuidar o overhead
+	// tem que ter o que escrever > 0 e entrada tem que ser menor
+	// q o numero de blocos
+	while(qtd_escrever > 0 && numero_entrada < 32)
+	{
+		// se for invalido tem q alocar
+		if(bloco_idx[numero_entrada] =0xffff)
 		{
-			/*le a entra em questão*/
 			bloco_idx[numero_entrada] = aloca();
-			/*marca o bloco*/
-			escreva_bloco_dados(lida.indireto , (uint8_t *) bloco_idx);
+			escreva_bloco_dados(lida.indireto , (uint8_t *) bloco_idx); 
+			// vai atulizar o ponteiro
 		}
-		/*le o bloco de dados*/
-		leia_bloco_dados (lida.indireto, (uint8_t *) &bloco_idx);
-		/*bloco da entrada*/
+		//agr le pq ta atualizado
+		leia_bloco_dados (lida.indireto, (uint8_t *) &bloco_idx); 
+		n= bloco_idx[numero_entrada]
+		leia_bloco_dados (n, (uint8_t *) &bloco);//vai ler o  bloco
 
-		//enquanto tiver coisa pra escrever e tiver endereço no bloco
-		// cuidar o overhead
-		// tem que ter o que escrever > 0 e entrada tem que ser menor
-		// q o numero de blocos
-		while()
-		{
-			// se for invalido tem q alocar
-			if(bloco_idx[numero_entrada] =0xffff)
-			{
-				bloco_idx[numero_entrada] = aloca();
-				escreva_bloco_dados(lida.indireto , (uint8_t *) bloco_idx); 
-				// vai atulizar o ponteiro
-			}
-			//agr le pq ta atualizado
-			leia_bloco_dados (lida.indireto, (uint8_t *) &bloco_idx); 
-			n= bloco_idx[numero_entrada]
-			leia_bloco_dados (n, (uint8_t *) &bloco);//vai ler o  bloco
-			
-			// tem que fazer um for pra gravar tipo o do fputc
-			// que incrementa o tamnho e faz um deslocamento	
-			// nesse for é gravado em um bloco os 
-			//valores do vetor passado como parâmetro.
+		// tem que fazer um for pra gravar tipo o do fputc
+		// que incrementa o tamnho e faz um deslocamento	
+		// nesse for é gravado em um bloco os 
+		//valores do vetor passado como parâmetro.
+		int i = deslocamento;
+		while(qtd_escrever > 0  &&  i < 32 ) {
+
+			bloco[numero_entrada] = buffer[qtd_escrever];
+			qtd_escrever --;
+			qn_esccrito++;
+			inodo_lida.tam--;
+			i++;			
+		}
+
 
 		escreva_bloco_dados(n ,  (uint8_t *) &bloco);
 		deslocamento =0;
 		numero_entrada++;
-		}		
+	}		
 		
 		
 		 
-		escreva_entrada(id, &lida);
-return qn_esccrito;
+	escreva_entrada(id, &lida);
+	return qn_esccrito;
 }
 	
 	
