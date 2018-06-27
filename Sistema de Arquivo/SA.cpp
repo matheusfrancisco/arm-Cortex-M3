@@ -95,7 +95,8 @@ MEU_FILE * meu_fopen (const char *st, const char *modo)
 			e a var livre for -1 marca essa posição
 			 como a posição para criar o arquivo.*/
 
-			if ((meu_inodo.status==0) && (livre==-1)) livre = x;
+			if ((meu_inodo.status==0) && (livre==-1))
+					 livre = x;
 			if (strcmp(meu_inodo.nome, st)==0)
 			{
 					// trabalho pois precisa desalocar blocos
@@ -103,7 +104,9 @@ MEU_FILE * meu_fopen (const char *st, const char *modo)
 				/** Se não achar entrada livre
 				vamos colcoar o mesmo nome na entrada*/
 				if(livre == -1)
+				{
 					livre =x;
+				}
 					
 			}
 		}
@@ -115,7 +118,7 @@ MEU_FILE * meu_fopen (const char *st, const char *modo)
 		/*cria um inodo novo e marca como ocupado*/
 		meu_inodo.indireto=0xffff; 
 		/*grava na memoria*/
-		escreve_entrada( livre , meu_inodo );		
+		escreve_entrada( livre , &meu_inodo );		
 		
 		//aloca o arquvio que será retornado, arquivo != inodo.
 		tmp  = (MEU_FILE *) malloc (sizeof(MEU_FILE));
@@ -131,7 +134,7 @@ MEU_FILE * meu_fopen (const char *st, const char *modo)
 		for (int x  =0; x< 12; x++)
 		{
 			leia_entrada(x,&meu_inodo);
-			if (struct(meu_inodo.nome, st)==0)
+			if (strcmp(meu_inodo.nome, st)==0)
 			{
 				livre=x;
 				 break;
@@ -139,6 +142,7 @@ MEU_FILE * meu_fopen (const char *st, const char *modo)
 		}
 		/*Fazer retornar NULL se não existir o arquivo*/
 		if(livre==-1){
+			//Aqui não exite o arquivo
 			return NULL;
 		}
 		/*se existir, retorna o arquivo.*/
@@ -212,7 +216,7 @@ uint16_t meu_fwrite( void *buffer, uint16_t tamanho, uint16_t count, MEU_FILE *A
 
     uint16_t qn_esccrito = 0; // é a quantidade de itens que vai ser lido 
     uint16_t qtd_escrever = tamanho * count;
-	uint8_t P_MEUFILE = A->posicao;//
+	
 	uint16_t id = A->id;
 	uint16_t n;
 	/** Para lembrar essa struct eu consigo acessar direto e indireto
@@ -241,7 +245,7 @@ uint16_t meu_fwrite( void *buffer, uint16_t tamanho, uint16_t count, MEU_FILE *A
 		return 0;
 	}
 	leia_entrada(id, &inodo_lida);// le a entrada do arquivo em questão
-	if (posicao < 32)
+	if (A->posicao < 32)
 	{
 		/*TEM quer fazer um for 
 		que a quantidade escrita vai ser menor que a posicao menos 32
@@ -337,7 +341,7 @@ uint16_t meu_fread(void * buffer, uint16_t tamanho, uint16_t count, MEU_FILE *A)
 	uint16_t n;
 	/** Para lembrar essa struct eu consigo acessar direto e indireto
 	char status;
-	char nome[8];
+	char nome[8];	
 	bloco_dados dados_diretos;
 	uint16_t indireto;
 	uint16_t tam;
