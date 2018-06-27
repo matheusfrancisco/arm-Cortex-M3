@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include "string.h"
 #include "SA.h"
 
 int main (void)
@@ -36,15 +38,21 @@ int main (void)
 	}
 	printf("\n\n");
 
+
+	meu_fclose(A);
+	meu_fclose(B);
+
 	//uint16_t meu_fwrite(MEU_FILE *A, void * buffer, uint16_t tamanho, uint16_t count)
-	C = meu_fopen("arquivao", "w");
+	C = meu_fopen("doido", "w");
 	
 	if(C==NULL) printf("Erro");
 
-	char a[90];
-	strcpy(a,"HHHHHHHHhhahahahhaha");
+	char txt[1000];
 
-	//meu_fwrite(C, a, sizeof(char), strlen(a));
+	strcpy(txt, "Olá mundo! Olá mundo, como vai você?");
+
+
+	meu_fwrite(C, (uint8_t*) txt, sizeof(char), strlen(txt));
 
 	meu_fseek(C,0);
 
@@ -52,5 +60,7 @@ int main (void)
 	{
 		printf("%c",meu_fgetc(C));
 	}
+
+	meu_fclose(C);
 	
 }
