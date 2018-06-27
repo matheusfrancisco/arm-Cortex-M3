@@ -80,7 +80,7 @@ int meu_fgetc( MEU_FILE *A );
 int meu_feof (MEU_FILE *A);
 
 /**/
-uint16_t meu_fwrite(MEU_FILE *A, void * buffer, uint16_t tamanho, uint16_t count);
+uint16_t meu_fwrite(MEU_FILE * arquivo, uint8_t * buffer, int bsize);
 /*Função formata SA*/
 
 uint16_t meu_ftell(MEU_FILE *A);
