@@ -241,12 +241,20 @@ uint16_t meu_fwrite( void *buffer, uint16_t tamanho, uint16_t count, MEU_FILE *A
 		return 0;
 	}
 	leia_entrada(id, &inodo_lida);// le a entrada do arquivo em questão
-		if (posicao < 32)
+	if (posicao < 32)
 	{
 		/*TEM quer fazer um for 
 		que a quantidade escrita vai ser menor que a posicao menos 32
 		e a quantidade que vai escrever tem que ser maior que zero*/
-		
+		while(qn_esccrito <  A->posicao && qtd_escrever > 0) 
+		{
+			
+			// aloca no bloco direto a posicao do buffer
+			inodo_lida.dados_diretos[A->posicao] = buffer[qn_esccrito];
+			qn_esccrito++;
+			// decrementa 1 byte
+			qtd_escrever--;
+		}
 	}
 	
 	/*se for ler ainda e tem q verificar se tem algo no indireto e alocar*/  
@@ -279,7 +287,8 @@ uint16_t meu_fwrite( void *buffer, uint16_t tamanho, uint16_t count, MEU_FILE *A
 		// cuidar o overhead
 		// tem que ter o que escrever > 0 e entrada tem que ser menor
 		// q o numero de blocos
-		while()
+		
+		while(qtd_escrever > 0 && numero_entrada < 32)
 		{
 			// se for invalido tem q alocar
 			if(bloco_idx[numero_entrada] =0xffff)
@@ -297,7 +306,15 @@ uint16_t meu_fwrite( void *buffer, uint16_t tamanho, uint16_t count, MEU_FILE *A
 			// que incrementa o tamnho e faz um deslocamento	
 			// nesse for é gravado em um bloco os 
 			//valores do vetor passado como parâmetro.
+			int i = deslocamento;
+			while(qtd_escrever > 0  &&  i < 32 ) {
 
+				bloco[numero_entrada] = buffer[qtd_escrever];
+				qtd_escrever --;
+				qn_esccrito++;
+				inodo_lida.tam--;
+				i++;			
+	 		}
 		escreva_bloco_dados(n ,  (uint8_t *) &bloco);
 		deslocamento =0;
 		numero_entrada++;
@@ -380,9 +397,15 @@ int meu_feof (MEU_FILE *A)
  * 		On success, the current value of the position indicator is returned.
  * 		On failure, -1L is returned, and errno is set to a system-specific positive value.
  */
-void meu_ftell(MEU_FILE *A)
+uint16_t meu_ftell(MEU_FILE *A)
 {
-    return (A == NULL) ? INVALIDO : A->posicao;
+ 
+ if (A != NULL)
+		return A->posicao; //ftell retorna a posição corrente no arquivo A e 0xFFFF se o arquivo for nulo.
+	else{
+		return 0xFFFF; 
+		
+	}	  
 }
 
 
@@ -637,7 +660,7 @@ void cria_blocos_dados()
 
 }
 
-void remove_entrada(uint16_t id)
+void remove_entrada(uint8_t id)
 {
 	struct  inodo aux;
 
@@ -646,13 +669,14 @@ void remove_entrada(uint16_t id)
 	if(ptr_indireto==0xFFFF)
 	{
 		bloco_indice blc_idx; //bloco de endereos
-		leia_bloco_dados(,(uint8_t*),&blc_idx);
+		leia_bloco_dados(ptr_indireto,(uint8_t *)&blc_idx);
 		int i =0;
 
-		while(i<TAMANHO_BLOCO_INDICES && blc_idx[i] != 0xffff; i++)	
+		while(i<TAMANHO_BLOCO_INDICES && blc_idx[i] != 0xffff)	
 		{
 			escreva_bloco_ponteiro(blc_idx[i], le_cabecalho());
 			escreve_cabecalho(blc_idx[i]); // para remover uma entrada, gravamos o valor do cabeçalho no bloco referente a entrada em questão, e marcamos essa como o valor do cabeçalho. (novo.valor = cabecalho.valor; cabecalho.valor = novo; +- assim);
+			i++;
 		}
 		escreva_bloco_ponteiro(ptr_indireto, le_cabecalho());
 		escreve_cabecalho(ptr_indireto);

@@ -60,7 +60,7 @@ void cria_blocos_livres();
 void cria_blocos_dados();
 void formata (void);
 
-void remove_entrada(void);
+void remove_entrada(uint8_t id);
 /*END Feitas em sala de aula*/
 
 
@@ -83,6 +83,7 @@ int meu_feof (MEU_FILE *A);
 uint16_t meu_fwrite(MEU_FILE *A, void * buffer, uint16_t tamanho, uint16_t count);
 /*Função formata SA*/
 
+uint16_t meu_ftell(MEU_FILE *A);
 
 
 
