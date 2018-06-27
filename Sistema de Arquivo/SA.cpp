@@ -1,5 +1,4 @@
 
-
 #include "SA.h"
 #include "memoria.h"
 #include "inttypes.h"
@@ -52,6 +51,26 @@ void escreve_entrada( uint16_t numero , struct inodo tmp)
 	uint16_t posicao = 2 + numero*sizeof(struct inodo);
 	memoria.write(posicao, sizeof(struct inodo), (uint8_t *)&tmp);
 }
+
+void remove_entrada( uint16_t id )
+{
+	struct inodo aux;
+	//memoria.read();
+	le_entrada_arquivo(id, &aux);
+
+
+	uint16_t ponteiros_indireto = aux.indireto;
+	if(ponteiros_indireto == 0xffff)
+	{
+
+		for(int i = 0; i < 10; i++) {
+		
+		}
+	}
+	// cria novo bloco limpo
+	cria_entrada(id);
+}
+
 	
 /*Inicio da leitura e escrita*/
 /**
@@ -95,18 +114,17 @@ MEU_FILE * meu_fopen (const char *st, const char *modo)
 			e a var livre for -1 marca essa posição
 			 como a posição para criar o arquivo.*/
 
-			if ((meu_inodo.status==0) && (livre==-1))
-					 livre = x;
+			if ((meu_inodo.status==0) && (livre==-1)) livre = x;
 			if (strcmp(meu_inodo.nome, st)==0)
 			{
 					// trabalho pois precisa desalocar blocos
 				remove_entrada(x);
+
+				
 				/** Se não achar entrada livre
 				vamos colcoar o mesmo nome na entrada*/
 				if(livre == -1)
-				{
 					livre =x;
-				}
 					
 			}
 		}
@@ -118,7 +136,7 @@ MEU_FILE * meu_fopen (const char *st, const char *modo)
 		/*cria um inodo novo e marca como ocupado*/
 		meu_inodo.indireto=0xffff; 
 		/*grava na memoria*/
-		escreve_entrada( livre , &meu_inodo );		
+		escreve_entrada( livre , meu_inodo );		
 		
 		//aloca o arquvio que será retornado, arquivo != inodo.
 		tmp  = (MEU_FILE *) malloc (sizeof(MEU_FILE));
@@ -142,7 +160,6 @@ MEU_FILE * meu_fopen (const char *st, const char *modo)
 		}
 		/*Fazer retornar NULL se não existir o arquivo*/
 		if(livre==-1){
-			//Aqui não exite o arquivo
 			return NULL;
 		}
 		/*se existir, retorna o arquivo.*/
@@ -173,8 +190,8 @@ int meu_fclose(MEU_FILE *A)
 	if(A == NULL){
 		return 1;
 	}
-	/*Acho que funciona faz uns testes ai bundão*/
-	free(&A);
+	/*Acho que funciona faz uns testes ai*/
+	free(A);
 	return 0;
 
 }
@@ -198,26 +215,24 @@ int meu_fclose(MEU_FILE *A)
 void meu_fseek ( MEU_FILE *A, uint16_t offset )
 {
 	A->posicao = offset;
-	/*Falta implementar algo aqui Manão bundão*/
-	if (A == NULL){
-		return 0;
-	}
-
+	/*Falta implementar algo */
 }
-
-
 
 /** buffer de bytes a serem escrito
 tamanho é o tamanho de cada item, e 
 count é a quantidade a ser escrita
 **/
-uint16_t meu_fwrite( void *buffer, uint16_t tamanho, uint16_t count, MEU_FILE *A)
-{
+uint16_t meu_fwrite(MEU_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count) {
 
-    uint16_t qn_esccrito = 0; // é a quantidade de itens que vai ser lido 
-    uint16_t qtd_escrever = tamanho * count;
-	
+    uint16_t qn_esccrito = 0; // é a quantidade de itens que vai ser lido
+
+    // quantidade de bytes que falta escrever
+    uint16_t qtd_escrever = size * count;
+
+	//uint8_t P_MEUFILE = A->posicao;//
 	uint16_t id = A->id;
+	uint16_t posicao = A->posicao;
+
 	uint16_t n;
 	/** Para lembrar essa struct eu consigo acessar direto e indireto
 	char status;
@@ -233,101 +248,106 @@ uint16_t meu_fwrite( void *buffer, uint16_t tamanho, uint16_t count, MEU_FILE *A
 
 	if(buffer == NULL || A == NULL)
 	{
-
 		//ERRROOO
 		return -2; 
 	}
 	if(A->modo == 'r'){
 		return 0;
 	}
-	if(tamanho == 0 && count ==0)
+	if(count ==0)
 	{
 		return 0;
 	}
 	leia_entrada(id, &inodo_lida);// le a entrada do arquivo em questão
-	if (A->posicao < 32)
-	{
+	
+
+
+	if (posicao < 32) {
 		/*TEM quer fazer um for 
 		que a quantidade escrita vai ser menor que a posicao menos 32
 		e a quantidade que vai escrever tem que ser maior que zero*/
-		while(qn_esccrito <(32- A->posicao) && qtd_escrever > 0) 
-		{
+
+		printf("qn escrito = %i, qtd escreve = %i", qn_esccrito, qtd_escrever);
+		while((A->posicao+qn_esccrito) <  32 && qtd_escrever > 0) {
 			
 			// aloca no bloco direto a posicao do buffer
-			inodo_lida.dados_diretos[A->posicao++] = buffer[qn_esccrito];
+			printf("@@escrevendo %i @@\n\n ", buffer[qn_esccrito]);
+			inodo_lida.dados_diretos[posicao] = buffer[qn_esccrito];
 			qn_esccrito++;
-			inodo_lida.tam++;
 			// decrementa 1 byte
 			qtd_escrever--;
+			posicao++;
+
+			// aumenta tamanho do inodo
+			inodo_lida.tam++;
 		}
+		
+	}
+
+	/*se for ler ainda e tem q verificar se tem algo no indireto e alocar*/  
+	// verifica se chegou no final e tem algo p escrever
+	if (inodo_lida.indireto==0xFFFF && qtd_escrever > 0)  {
+		/*caso não foi alocado, devemos alocar o indireto*/
+		inodo_lida.indireto = aloca ();
+	}
+
+
+	/*Calcula deslocamento e entrada corrente*/
+	// dos blocos de endereço seja a inicial
+	uint16_t numero_entrada = (posicao / 32);
+	// calcula o deslocamento caso a poosição 
+	uint8_t deslocamento    = posicao % 32;
+	
+	// aloca bloco de dados indireto p começar a operacao
+	leia_bloco_dados (inodo_lida.indireto, (uint8_t *) &bloco_idx);
+	/*Caso a entrada não esteja alocada temos que alocar ela*/
+	if (bloco_idx[numero_entrada]==0xffff)
+	{
+		/*le a entra em questão*/
+		bloco_idx[numero_entrada] = aloca();
+		/*marca o bloco*/
+		escreva_bloco_dados(inodo_lida.indireto , (uint8_t *) bloco_idx);
+	}
+	/*le o bloco de dados*/
+	leia_bloco_dados (inodo_lida.indireto, (uint8_t *) &bloco_idx);
+	
+	/*bloco da entrada*/
+	//enquanto tiver coisa pra escrever e tiver endereço no bloco
+	// cuidar o overhead
+	// tem que ter o que escrever > 0 e entrada tem que ser menor
+	// q o numero de blocos
+	
+	while(qtd_escrever > 0 && numero_entrada < TAMANHO_BLOCO_INDICES) {
+		// se for invalido tem q alocar
+		if(bloco_idx[numero_entrada] =0xffff) {
+			bloco_idx[numero_entrada] = aloca();
+			escreva_bloco_dados(inodo_lida.indireto , (uint8_t *) bloco_idx); 
+			// vai atulizar o ponteiro
+		}
+		//agr le pq ta atualizado
+		leia_bloco_dados (inodo_lida.indireto, (uint8_t *) &bloco_idx); 
+		n= bloco_idx[numero_entrada];
+		leia_bloco_dados (n, (uint8_t *) &bloco);//vai ler o  bloco
+			// tem que fazer um for pra gravar tipo o do fputc
+		// que incrementa o tamnho e faz um deslocamento	
+		// nesse for é gravado em um bloco os 
+		//valores do vetor passado como parâmetro.
+		int i = deslocamento;
+		
+		while(qtd_escrever > 0  &&  i < 32 ) {
+			bloco[numero_entrada] = buffer[qn_esccrito];
+			qtd_escrever--;
+			qn_esccrito++;
+			inodo_lida.tam++;
+			i++;		
+		}
+
+		escreva_bloco_dados(n ,  (uint8_t *) &bloco);
+		deslocamento = 0;
+		numero_entrada++;
 	}
 	
-	/*se for ler ainda e tem q verificar se tem algo no indireto e alocar*/  
-	if (inodo_lida.indireto==0xFFFF && qtd_escrever >0) 
-		{
-			/*caso não foi alocado, devemos alocar o indireto*/
-			inodo_lida.indireto = aloca ();
-		}
-		/*Calcula deslocamento e entrada corrente*/
-		// dos blocos de endereço seja a inicial
-		uint16_t numero_entrada = (A->posicao / 32);
-		// calcula o deslocamento caso a poosição 
-		uint8_t deslocamento    = A->posicao % 32;
-		
-		
-		leia_bloco_dados (inodo_lida.indireto, (uint8_t *) &bloco_idx);
-		/*Caso a entrada não esteja alocada temos que alocar ela*/
-		if (bloco_idx[numero_entrada]==0xffff)
-		{
-			/*le a entra em questão*/
-			bloco_idx[numero_entrada] = aloca();
-			/*marca o bloco*/
-			escreva_bloco_dados(lida.indireto , (uint8_t *) bloco_idx);
-		}
-		/*le o bloco de dados*/
-		leia_bloco_dados (lida.indireto, (uint8_t *) &bloco_idx);
-		/*bloco da entrada*/
-
-		//enquanto tiver coisa pra escrever e tiver endereço no bloco
-		// cuidar o overhead
-		// tem que ter o que escrever > 0 e entrada tem que ser menor
-		// q o numero de blocos
-		
-		while(qtd_escrever > 0 && numero_entrada < 16)
-		{
-			// se for invalido tem q alocar
-			if(bloco_idx[numero_entrada] =0xffff)
-			{
-				bloco_idx[numero_entrada] = aloca();
-				escreva_bloco_dados(lida.indireto , (uint8_t *) bloco_idx); 
-				// vai atulizar o ponteiro
-			}
-			//agr le pq ta atualizado
-			leia_bloco_dados (lida.indireto, (uint8_t *) &bloco_idx); 
-			n= bloco_idx[numero_entrada]
-			leia_bloco_dados (n, (uint8_t *) &bloco);//vai ler o  bloco
-			
-			// tem que fazer um for pra gravar tipo o do fputc
-			// que incrementa o tamnho e faz um deslocamento	
-			// nesse for é gravado em um bloco os 
-			//valores do vetor passado como parâmetro.
-			int i = deslocamento;
-			while(qtd_escrever > 0  &&  i < 32 ) {
-
-				bloco[numero_entrada] = buffer[qtd_escrever];
-				qtd_escrever --;
-				qn_esccrito++;
-				inodo_lida.tam--;
-				i++;			
-	 		}
-		escreva_bloco_dados(n ,  (uint8_t *) &bloco);
-		deslocamento =0;
-		numero_entrada++;
-		}		
-		
-		
-		 
-		escreva_entrada(id, &lida);
+	escreva_entrada(id, &inodo_lida);
 	return qn_esccrito;
 }
 	
@@ -341,7 +361,7 @@ uint16_t meu_fread(void * buffer, uint16_t tamanho, uint16_t count, MEU_FILE *A)
 	uint16_t n;
 	/** Para lembrar essa struct eu consigo acessar direto e indireto
 	char status;
-	char nome[8];	
+	char nome[8];
 	bloco_dados dados_diretos;
 	uint16_t indireto;
 	uint16_t tam;
@@ -402,15 +422,9 @@ int meu_feof (MEU_FILE *A)
  * 		On success, the current value of the position indicator is returned.
  * 		On failure, -1L is returned, and errno is set to a system-specific positive value.
  */
-uint16_t meu_ftell(MEU_FILE *A)
+int meu_ftell(MEU_FILE *A)
 {
- 
- if (A != NULL)
-		return A->posicao; //ftell retorna a posição corrente no arquivo A e 0xFFFF se o arquivo for nulo.
-	else{
-		return 0xFFFF; 
-		
-	}	  
+    return A == NULL ? -1 : A->posicao;
 }
 
 
@@ -663,31 +677,6 @@ void cria_blocos_dados()
 		escreva_bloco_dados(x, buffer);
 	
 
-}
-
-void remove_entrada(uint8_t id)
-{
-	struct  inodo aux;
-
-	le_entrada_arquivo(id,&aux);
-	uint16_t ptr_indireto = aux.indireto;
-	if(ptr_indireto==0xFFFF)
-	{
-		bloco_indice blc_idx; //bloco de endereos
-		leia_bloco_dados(ptr_indireto,(uint8_t *)&blc_idx);
-		int i =0;
-
-		while(i<TAMANHO_BLOCO_INDICES && blc_idx[i] != 0xffff)	
-		{
-			escreva_bloco_ponteiro(blc_idx[i], le_cabecalho());
-			escreve_cabecalho(blc_idx[i]); // para remover uma entrada, gravamos o valor do cabeçalho no bloco referente a entrada em questão, e marcamos essa como o valor do cabeçalho. (novo.valor = cabecalho.valor; cabecalho.valor = novo; +- assim);
-			i++;
-		}
-		escreva_bloco_ponteiro(ptr_indireto, le_cabecalho());
-		escreve_cabecalho(ptr_indireto);
-		
-	}
-	cria_entrada(id);
 }
 
 void escreva_bloco_dados(uint16_t numero ,uint8_t *valor)
