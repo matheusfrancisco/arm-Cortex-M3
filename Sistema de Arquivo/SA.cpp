@@ -246,12 +246,13 @@ uint16_t meu_fwrite( void *buffer, uint16_t tamanho, uint16_t count, MEU_FILE *A
 		/*TEM quer fazer um for 
 		que a quantidade escrita vai ser menor que a posicao menos 32
 		e a quantidade que vai escrever tem que ser maior que zero*/
-		while(qn_esccrito <  A->posicao && qtd_escrever > 0) 
+		while(qn_esccrito <(32- A->posicao) && qtd_escrever > 0) 
 		{
 			
 			// aloca no bloco direto a posicao do buffer
-			inodo_lida.dados_diretos[A->posicao] = buffer[qn_esccrito];
+			inodo_lida.dados_diretos[A->posicao++] = buffer[qn_esccrito];
 			qn_esccrito++;
+			inodo_lida.tam++;
 			// decrementa 1 byte
 			qtd_escrever--;
 		}
@@ -288,7 +289,7 @@ uint16_t meu_fwrite( void *buffer, uint16_t tamanho, uint16_t count, MEU_FILE *A
 		// tem que ter o que escrever > 0 e entrada tem que ser menor
 		// q o numero de blocos
 		
-		while(qtd_escrever > 0 && numero_entrada < 32)
+		while(qtd_escrever > 0 && numero_entrada < 16)
 		{
 			// se for invalido tem q alocar
 			if(bloco_idx[numero_entrada] =0xffff)
@@ -323,7 +324,7 @@ uint16_t meu_fwrite( void *buffer, uint16_t tamanho, uint16_t count, MEU_FILE *A
 		
 		 
 		escreva_entrada(id, &lida);
-return qn_esccrito;
+	return qn_esccrito;
 }
 	
 	
