@@ -49,12 +49,23 @@ int main (void)
 
 	char txt[1000];
 
-	strcpy(txt, "Olá mundo! Olá mundo, como vai você?");
+	strcpy(txt,"Cpp,ppp como vai você?");
 
 
 	meu_fwrite(C, (uint8_t*) txt, sizeof(char), strlen(txt));
 
+	meu_fclose(C);
+
+	C = meu_fopen("huehue", "w");
+	meu_fwrite(C, (uint8_t*) txt, sizeof(char), strlen(txt));
+
 	meu_fseek(C,0);
+
+
+	//MEU_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count
+
+	uint8_t * x; 
+	meu_fread(C, (uint8_t*) x, sizeof(char), 1);
 
 	while (!meu_feof(C))
 	{
