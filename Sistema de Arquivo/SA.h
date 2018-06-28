@@ -82,6 +82,8 @@ int meu_feof (MEU_FILE *A);
 
 /**/
 uint16_t meu_fwrite(MEU_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count) ;
+
+uint16_t meu_fread(MEU_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count) ;
 /*Função formata SA*/
 
 uint16_t meu_ftell(MEU_FILE *A);
