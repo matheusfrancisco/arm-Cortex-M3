@@ -411,16 +411,14 @@ uint16_t meu_fwrite(MEU_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count
 		e a quantidade que vai escrever tem que ser maior que zero*/
 
 		printf("qn escrito = %i, qtd escreve = %i", qn_esccrito, qtd_escrever);
-		while((A->posicao+qn_esccrito) <  32 && qtd_escrever > 0) {
-			
+		//while((A->posicao+qn_esccrito) <  32 && qtd_escrever > 0) {
+		for (; qn_esccrito < (32 - posicao) && qtd_escrever > 0;){	
 			// aloca no bloco direto a posicao do buffer
 			printf("@@escrevendo %i @@\n\n ", buffer[qn_esccrito]);
-			inodo_lida.dados_diretos[posicao] = buffer[qn_esccrito];
-			qn_esccrito++;
+			inodo_lida.dados_diretos[A->posicao++] = buffer[qn_esccrito++];
+			//qn_esccrito++;
 			// decrementa 1 byte
 			qtd_escrever--;
-			posicao++;
-
 			// aumenta tamanho do inodo
 			inodo_lida.tam++;
 		}
@@ -437,9 +435,9 @@ uint16_t meu_fwrite(MEU_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count
 
 	/*Calcula deslocamento e entrada corrente*/
 	// dos blocos de endereço seja a inicial
-	uint16_t numero_entrada = (posicao / 32);
+	uint16_t numero_entrada = (A->posicao / 32);
 	// calcula o deslocamento caso a poosição 
-	uint8_t deslocamento    = posicao % 32;
+	uint8_t deslocamento    = A->posicao % 32;
 	
 	// aloca bloco de dados indireto p começar a operacao
 	leia_bloco_dados (inodo_lida.indireto, (uint8_t *) &bloco_idx);
@@ -475,7 +473,7 @@ uint16_t meu_fwrite(MEU_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count
 		// que incrementa o tamnho e faz um deslocamento	
 		// nesse for é gravado em um bloco os 
 		//valores do vetor passado como parâmetro.
-		int i = deslocamento;
+		// int i = deslocamento;
 		
 		/*
 		while(qtd_escrever > 0  &&  i < 32 ) {
@@ -490,7 +488,7 @@ uint16_t meu_fwrite(MEU_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count
 		for(uint16_t x = deslocamento; x < 32 && qtd_escrever > 0; x++) {
 			bloco[x] = buffer[qn_esccrito++];
 			qtd_escrever--;
-			posicao++;
+			A->posicao++;
 			inodo_lida.tam++;
 		}
 
@@ -500,31 +498,26 @@ uint16_t meu_fwrite(MEU_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count
 		deslocamento = 0;
 		numero_entrada++;
 	}
-	A->posicao = posicao;
+	//A->posicao = posicao;
 	escreva_entrada(id, &inodo_lida);
 	return qn_esccrito;
 }
 	
 
 // Lê um arquivo e passa count bytes para o buffer desejado
-uint16_t meu_fread(MEU_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count) {
+uint16_t meu_fread(MEU_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count) 
+{
     uint16_t qn_lido = 0; // é a quantidade de itens que vai ser lido
 
     // quantidade de bytes que falta escrever
-    uint16_t qtd_escrever = size * count;
+    uint16_t qtd_ler = size * count;
 
 	//uint8_t P_MEUFILE = A->posicao;//
 	uint16_t id = A->id;
 	uint16_t posicao = A->posicao;
 
 	uint16_t n;
-	/** Para lembrar essa struct eu consigo acessar direto e indireto
-	char status;
-	char nome[8];
-	bloco_dados dados_diretos;
-	uint16_t indireto;
-	uint16_t tam;
-	**/
+	
     struct inodo inodo_lida; 
 
 	bloco_dados bloco_idx;
@@ -541,100 +534,64 @@ uint16_t meu_fread(MEU_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count)
 	}
 	leia_entrada(id, &inodo_lida);// le a entrada do arquivo em questão
 	
-
-
-	if (posicao < 32) {
+	if (posicao < 32) 
+	{
 		/*TEM quer fazer um for 
 		que a quantidade escrita vai ser menor que a posicao menos 32
 		e a quantidade que vai escrever tem que ser maior que zero*/
-
+		
+		for (; A->posicao < 32 && qtd_ler > 0 && A->posicao <= inodo_lida.tam;){
+				buffer[qn_lido++] = inodo_lida.dados_diretos[A->posicao++]; //lemos dos dados diretos até não ter mais espaço, ainda houver algo para ler (se não chegar no fim do arquivo) e enquanto a qtd a ser lida não foi lida
+				qtd_ler--;
+			}
+		/* não funciona QUE RAIVA :@@@@
 		while((A->posicao+qn_lido) <  32 && qtd_escrever > 0) {
 			buffer[qn_lido] = inodo_lida.dados_diretos[posicao];
 			qn_lido++;
 			// decrementa 1 byte
 			qtd_escrever--;
 			posicao++;
-		}
-		
+		*/
 	}
+
+		
+	printf("AQUIIII CARAIi\n" );	
 
 	/*se for ler ainda e tem q verificar se tem algo no indireto e alocar*/  
 	// verifica se chegou no final e tem algo p escrever
-	if (inodo_lida.indireto==0xFFFF && qtd_escrever > 0)  {
+	if (inodo_lida.indireto==0xFFFF && qtd_ler > 0)  
+	{
 		/*caso não foi alocado, devemos alocar o indireto*/
 		inodo_lida.indireto = aloca ();
-	}
-
+		
 
 	/*Calcula deslocamento e entrada corrente*/
 	// dos blocos de endereço seja a inicial
-	uint16_t numero_entrada = (posicao / 32);
+	uint16_t numero_entrada = (A->posicao / 32);
 	// calcula o deslocamento caso a poosição 
-	uint8_t deslocamento    = posicao % 32;
+	uint8_t deslocamento    = A->posicao % 32;
 	
 	// aloca bloco de dados indireto p começar a operacao
 	leia_bloco_dados (inodo_lida.indireto, (uint8_t *) &bloco_idx);
 	/*Caso a entrada não esteja alocada temos que alocar ela*/
-	if (bloco_idx[numero_entrada]==0xffff)
-	{
-		/*le a entra em questão*/
-		bloco_idx[numero_entrada] = aloca();
-		/*marca o bloco*/
-		escreva_bloco_dados(inodo_lida.indireto , (uint8_t *) bloco_idx);
-	}
-	/*le o bloco de dados*/
-	leia_bloco_dados (inodo_lida.indireto, (uint8_t *) &bloco_idx);
-	
-	/*bloco da entrada*/
-	//enquanto tiver coisa pra escrever e tiver endereço no bloco
-	// cuidar o overhead
-	// tem que ter o que escrever > 0 e entrada tem que ser menor
-	// q o numero de blocos
-	
-	while(qtd_escrever > 0 && numero_entrada < TAMANHO_BLOCO_INDICES) {
-		// se for invalido tem q alocar
-		if(bloco_idx[numero_entrada] =0xffff) {
-			bloco_idx[numero_entrada] = aloca();
-			escreva_bloco_dados(inodo_lida.indireto , (uint8_t *) bloco_idx); 
-			// vai atulizar o ponteiro
+	while(qtd_ler > 0 && A->posicao <= inodo_lida.tam && numero_entrada < TAMANHO_BLOCO_INDICES)
+	{ //enquanto se quer ler algo, o final do arquivo nao chegar e o numeor da entrada (do bloco de endereços) for menor do que o tamanho (16 entradas são possíveis)
+				uint16_t n = bloco_idx[numero_entrada]; 
+				leia_bloco_dados (n, (uint8_t *) &bloco); //le o proximo bloco
+				for (int x = deslocamento; x < TAMANHO_BLOCO_DADOS && qtd_ler > 0 && A->posicao <= inodo_lida.tam; x++)
+				{
+					buffer[qn_lido++] = bloco[x]; //le cada posição do bloco em questão
+					qtd_ler--;
+					A->posicao++;
+				}
+				deslocamento = 0;
+				numero_entrada++;
+			}
 		}
-		//agr le pq ta atualizado
-		leia_bloco_dados (inodo_lida.indireto, (uint8_t *) &bloco_idx); 
-		n= bloco_idx[numero_entrada];
-		leia_bloco_dados (n, (uint8_t *) &bloco);//vai ler o  bloco
-			// tem que fazer um for pra gravar tipo o do fputc
-		// que incrementa o tamnho e faz um deslocamento	
-		// nesse for é gravado em um bloco os 
-		//valores do vetor passado como parâmetro.
-		int i = deslocamento;
 		
-		/*
-		while(qtd_escrever > 0  &&  i < 32 ) {
-			bloco[i] = buffer[qn_esccrito];
-			qtd_escrever--;
-			qn_esccrito++;
-			inodo_lida.tam++;
-			posicao++;
-			i++;		
-		}*/
-
-		for(uint16_t x = deslocamento; x < 32 && qtd_escrever > 0; x++) {
-			buffer[qn_lido] = bloco[x];
-			qn_lido++;
-			qtd_escrever--;
-			posicao++;
-		}
-
-		// escreve novamente o bloco que acabou de ser atualizado(bloco de dados)
-		escreva_bloco_dados(n ,  (uint8_t *) &bloco);
-		// zera o deslocamento para o próximo bloco
-		deslocamento = 0;
-		numero_entrada++;
-	}
-	A->posicao = posicao;
-	escreva_entrada(id, &inodo_lida);
-	return qn_lido;
-
+		buffer[size * count] = '\0'; //grava a pŕoxima posição como caracter final de frase. (caso for uma string)
+		return qn_lido; //retorna quantos bytes foram lidos
+	
 
 }
 
