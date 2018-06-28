@@ -13,6 +13,141 @@
 
 
 
+uint16_t le_cabecalho ()
+{
+	/*retorna o valor do cabeçalho 
+	Quer dizer o valor do próximo bloco disponivel para alocação*/
+	uint16_t numero;
+	memoria.read(0, 2, (uint8_t *) &numero);
+	return numero;
+}
+void escreve_cabecalho (uint16_t numero)
+{
+	/*/grava o numero do proximo bloco disponível no cabeçalho.*/
+	memoria.write(0, 2, (uint8_t *) &numero);
+}
+
+/*Fim do Cabeçalho*/
+
+void leia_entrada (uint8_t numero, struct inodo *i)
+{
+	/* pula o cabecalho (2) e faz o numero da entrada vezes o
+	 tamanho, isso retorna a posição na memória da entrada.*/
+	uint16_t posicao = 2 + numero*sizeof(struct inodo);
+	memoria.read(posicao, sizeof(struct inodo), (uint8_t *)i);  //le a entrada
+}
+
+void escreva_entrada (uint8_t numero, struct inodo *i)
+{
+	/* pula o cabecalho (2) e faz o numero da entrada vezes o
+	 tamanho, isso retorna a posição na memória da entrada.*/
+	uint16_t posicao = 2 + numero*sizeof(struct inodo);
+	memoria.write(posicao, sizeof(struct inodo), (uint8_t *)i);// grava a entrada
+}
+
+
+
+void cria_entrada (uint8_t numero)
+{
+
+	struct inodo tmp;	//Cria lista
+	tmp.status = 0; // define seus valores padrões como 0
+	tmp.tam=0;
+	strcpy(tmp.nome,"VAZIO"); // Nome fica vazio
+	tmp.indireto=0xFFFF;
+	for (int a=0;a<32;a++) tmp.dados_diretos[a]=0;// zera os dados diretos
+	/*pula o cabecalho (2) e faz o numero da entrada vezes o tamanho,
+	 isso retorna a posição na memória da entrada.*/
+	uint16_t posicao = 2 + numero*sizeof(struct inodo);
+	memoria.write(posicao, sizeof(struct inodo), (uint8_t *)&tmp); //grava na memoria
+	
+}
+/*Inicio Bloco de ponteiros*/
+void cria_blocos_livres()
+{
+	/*bloco livre 
+	lista de blocos para alocação*/
+	for (int x=0;x<224;x++)
+		/*para cada lista, fizemos cada bloco i, receer i+1*/
+		escreva_bloco_ponteiro(x, x+1);
+		/*Os blocos da lista tem um ponteiro seg (next->)
+		para o proximo da lista caso estivermos no ultimo bloco
+		marcamos  o next como inválido*/
+	escreva_bloco_ponteiro(224, 0xFFFF);
+}
+
+void escreva_bloco_ponteiro(uint16_t numero, uint16_t valor)
+{
+	/*calcula a posição na memoria 
+	do bloco para alocação (ponteiro) (da lista) em questão*/
+	uint16_t endereco = numero * 2 + INICIO_PONTEIROS; 
+	memoria.write(endereco, 2, (uint8_t *)&valor);
+}
+void leia_bloco_ponteiro(uint16_t numero, uint16_t *valor)
+{
+	/*calcula a posição na memoria 
+	do bloco para alocação (ponteiro) (da lista) em questão*/
+	uint16_t endereco = numero * 2 + INICIO_PONTEIROS; 
+	memoria.read(endereco, 2, (uint8_t *)valor);
+}
+
+/*Fim dos Bloco de ponteiros*/
+
+
+/*Inicio dos blocos de dados*/
+uint16_t aloca (void)
+{
+	bloco_indice  bloco_idx;
+	 
+	uint16_t lido;
+	uint16_t  novo_bloco = le_cabecalho();
+	// le o bloco de dados no lido
+	
+	leia_bloco_ponteiro(novo_bloco, &lido);
+	
+	//escreve no cabecalho o next do bloco
+	
+	escreve_cabecalho (lido);
+	
+	leia_bloco_dados (novo_bloco, (uint8_t *) &bloco_idx);
+	for (int x=0;x<16;x++) //marca todos os valores do blcoo como invalido 
+		bloco_idx[x]=0xffff;
+	escreva_bloco_dados(novo_bloco, (uint8_t *) &bloco_idx);//escreve o bloco novamente
+
+	
+	
+	return novo_bloco;
+}
+
+
+void cria_blocos_dados()
+{
+	uint8_t buffer[32];
+	
+	for (int x=0;x<32;x++) buffer[x]=0;
+	
+	for (int x=0;x<225;x++)
+		escreva_bloco_dados(x, buffer);
+	
+
+}
+
+void escreva_bloco_dados(uint16_t numero ,uint8_t *valor)
+{
+		uint16_t endereco = numero * sizeof(bloco_dados) + INICIO_DADOS; 
+		memoria.write(endereco,  sizeof(bloco_dados),  valor);
+}
+
+void leia_bloco_dados(uint16_t numero ,uint8_t *valor)
+{
+		uint16_t endereco = numero * sizeof(bloco_dados) + INICIO_DADOS; 
+		memoria.read(endereco, sizeof(bloco_dados),  valor);
+}
+
+/*Fim dos blocos de dados*/
+
+
+
 /**
  * MEU_format() - Format de filesystem
  *
@@ -42,7 +177,7 @@ void formata (void)
 
 
 void le_entrada_arquivo (uint16_t numero, 	struct inodo *tmp)
-{
+{	
 	uint16_t posicao = 2 + numero*sizeof(struct inodo);
 	memoria.read(posicao, sizeof(struct inodo), (uint8_t *) tmp);
 }
@@ -52,24 +187,29 @@ void escreve_entrada( uint16_t numero , struct inodo tmp)
 	memoria.write(posicao, sizeof(struct inodo), (uint8_t *)&tmp);
 }
 
-void remove_entrada( uint16_t id )
-{
-	struct inodo aux;
-	//memoria.read();
-	le_entrada_arquivo(id, &aux);
-
-
-	uint16_t ponteiros_indireto = aux.indireto;
-	if(ponteiros_indireto == 0xffff)
-	{
-
-		for(int i = 0; i < 10; i++) {
+void remove_entrada (uint8_t id){
+	struct inodo tmp;
+	
+	leia_entrada(id, &tmp); // le a entrada desejada e salva no tmp
+	
+	uint16_t ponteiro_indireto = tmp.indireto;
+	if(ponteiro_indireto != 0xFFFF){ //se tiver dados indiretos alocados.
+	
+		bloco_indice  bloco_idx;  //bloco de endereços
+		leia_bloco_dados (ponteiro_indireto, (uint8_t *) &bloco_idx); //le o bloco do indireto (que tem os endereços dos blocos de dados)
 		
+		for (int i = 0; i < 16 && bloco_idx[i] != 0xffff; i++) // remove os blocos (referenciadas no bloco do indireto) ate achar uma entrada inválida.
+		{
+			escreva_bloco_ponteiro(bloco_idx[i], le_cabecalho());
+			escreve_cabecalho(bloco_idx[i]); // para remover uma entrada, gravamos o valor do cabeçalho no bloco referente a entrada em questão, e marcamos essa como o valor do cabeçalho. (novo.valor = cabecalho.valor; cabecalho.valor = novo; +- assim);
 		}
+		escreva_bloco_ponteiro(ponteiro_indireto, le_cabecalho());
+		escreve_cabecalho(ponteiro_indireto); //faz a mesma coisa, só que agora para o bloco do indireto
 	}
-	// cria novo bloco limpo
-	cria_entrada(id);
+	
+	cria_entrada(id); //recria a entrada, (zera tudo)
 }
+
 
 	
 /*Inicio da leitura e escrita*/
@@ -114,7 +254,10 @@ MEU_FILE * meu_fopen (const char *st, const char *modo)
 			e a var livre for -1 marca essa posição
 			 como a posição para criar o arquivo.*/
 
-			if ((meu_inodo.status==0) && (livre==-1)) livre = x;
+			if ((meu_inodo.status==0) && (livre==-1)) 
+			{
+				livre = x;
+			}
 			if (strcmp(meu_inodo.nome, st)==0)
 			{
 					// trabalho pois precisa desalocar blocos
@@ -422,10 +565,17 @@ int meu_feof (MEU_FILE *A)
  * 		On success, the current value of the position indicator is returned.
  * 		On failure, -1L is returned, and errno is set to a system-specific positive value.
  */
-int meu_ftell(MEU_FILE *A)
+
+uint16_t meu_ftell(MEU_FILE *A) //RETORNA 0xFFFF se A for Nulo (arquivo estiver fechado)
 {
-    return A == NULL ? -1 : A->posicao;
+	if (A != NULL)
+		return A->posicao; //ftell retorna a posição corrente no arquivo A e 0xFFFF se o arquivo for nulo.
+	else{
+		return 0xFFFF; 
+	}	
 }
+
+
 
 
 int meu_fgetc( MEU_FILE *A )
@@ -559,138 +709,3 @@ void meu_fputc ( uint8_t valor , MEU_FILE *A )
 	
 }
 /*FIM Escrita e Leitura de Arquivo*/
-
-uint16_t le_cabecalho ()
-{
-	/*retorna o valor do cabeçalho 
-	Quer dizer o valor do próximo bloco disponivel para alocação*/
-	uint16_t numero;
-	memoria.read(0, 2, (uint8_t *) &numero);
-	return numero;
-}
-void escreve_cabecalho (uint16_t numero)
-{
-	/*/grava o numero do proximo bloco disponível no cabeçalho.*/
-	memoria.write(0, 2, (uint8_t *) &numero);
-}
-
-/*Fim do Cabeçalho*/
-
-void leia_entrada (uint8_t numero, struct inodo *i)
-{
-	/* pula o cabecalho (2) e faz o numero da entrada vezes o
-	 tamanho, isso retorna a posição na memória da entrada.*/
-	uint16_t posicao = 2 + numero*sizeof(struct inodo);
-	memoria.read(posicao, sizeof(struct inodo), (uint8_t *)i);  //le a entrada
-}
-
-void escreva_entrada (uint8_t numero, struct inodo *i)
-{
-	/* pula o cabecalho (2) e faz o numero da entrada vezes o
-	 tamanho, isso retorna a posição na memória da entrada.*/
-	uint16_t posicao = 2 + numero*sizeof(struct inodo);
-	memoria.write(posicao, sizeof(struct inodo), (uint8_t *)i);// grava a entrada
-}
-
-
-
-void cria_entrada (uint8_t numero)
-{
-
-	struct inodo tmp;	//Cria lista
-	tmp.status = 0; // define seus valores padrões como 0
-	tmp.tam=0;
-	strcpy(tmp.nome,"VAZIO"); // Nome fica vazio
-	tmp.indireto=0xFFFF;
-	for (int a=0;a<32;a++) tmp.dados_diretos[a]=0;// zera os dados diretos
-	/*pula o cabecalho (2) e faz o numero da entrada vezes o tamanho,
-	 isso retorna a posição na memória da entrada.*/
-	uint16_t posicao = 2 + numero*sizeof(struct inodo);
-	memoria.write(posicao, sizeof(struct inodo), (uint8_t *)&tmp); //grava na memoria
-	
-}
-/*Inicio Bloco de ponteiros*/
-void cria_blocos_livres()
-{
-	/*bloco livre 
-	lista de blocos para alocação*/
-	for (int x=0;x<224;x++)
-		/*para cada lista, fizemos cada bloco i, receer i+1*/
-		escreva_bloco_ponteiro(x, x+1);
-		/*Os blocos da lista tem um ponteiro seg (next->)
-		para o proximo da lista caso estivermos no ultimo bloco
-		marcamos  o next como inválido*/
-	escreva_bloco_ponteiro(224, 0xFFFF);
-}
-
-void escreva_bloco_ponteiro(uint16_t numero, uint16_t valor)
-{
-	/*calcula a posição na memoria 
-	do bloco para alocação (ponteiro) (da lista) em questão*/
-	uint16_t endereco = numero * 2 + INICIO_PONTEIROS; 
-	memoria.write(endereco, 2, (uint8_t *)&valor);
-}
-void leia_bloco_ponteiro(uint16_t numero, uint16_t *valor)
-{
-	/*calcula a posição na memoria 
-	do bloco para alocação (ponteiro) (da lista) em questão*/
-	uint16_t endereco = numero * 2 + INICIO_PONTEIROS; 
-	memoria.read(endereco, 2, (uint8_t *)valor);
-}
-
-/*Fim dos Bloco de ponteiros*/
-
-
-/*Inicio dos blocos de dados*/
-uint16_t aloca (void)
-{
-	bloco_indice  bloco_idx;
-	 
-	uint16_t lido;
-	uint16_t  novo_bloco = le_cabecalho();
-	// le o bloco de dados no lido
-	
-	leia_bloco_ponteiro(novo_bloco, &lido);
-	
-	//escreve no cabecalho o next do bloco
-	
-	escreve_cabecalho (lido);
-	
-	leia_bloco_dados (novo_bloco, (uint8_t *) &bloco_idx);
-	for (int x=0;x<16;x++) //marca todos os valores do blcoo como invalido 
-		bloco_idx[x]=0xffff;
-	escreva_bloco_dados(novo_bloco, (uint8_t *) &bloco_idx);//escreve o bloco novamente
-
-	
-	
-	return novo_bloco;
-}
-
-
-void cria_blocos_dados()
-{
-	uint8_t buffer[32];
-	
-	for (int x=0;x<32;x++) buffer[x]=0;
-	
-	for (int x=0;x<225;x++)
-		escreva_bloco_dados(x, buffer);
-	
-
-}
-
-void escreva_bloco_dados(uint16_t numero ,uint8_t *valor)
-{
-		uint16_t endereco = numero * sizeof(bloco_dados) + INICIO_DADOS; 
-		memoria.write(endereco,  sizeof(bloco_dados),  valor);
-}
-
-void leia_bloco_dados(uint16_t numero ,uint8_t *valor)
-{
-		uint16_t endereco = numero * sizeof(bloco_dados) + INICIO_DADOS; 
-		memoria.read(endereco, sizeof(bloco_dados),  valor);
-}
-
-/*Fim dos blocos de dados*/
-
-
