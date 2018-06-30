@@ -409,12 +409,11 @@ uint16_t meu_fwrite(MEU_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count
 		/*TEM quer fazer um for 
 		que a quantidade escrita vai ser menor que a posicao menos 32
 		e a quantidade que vai escrever tem que ser maior que zero*/
-
-		printf("qn escrito = %i, qtd escreve = %i", qn_esccrito, qtd_escrever);
+//printf("teste doido")
 		//while((A->posicao+qn_esccrito) <  32 && qtd_escrever > 0) {
 		for (; qn_esccrito < (32 - posicao) && qtd_escrever > 0;){	
 			// aloca no bloco direto a posicao do buffer
-			printf("@@escrevendo %i @@\n\n ", buffer[qn_esccrito]);
+//			printf("@@escrevendo %i @@\n\n ", buffer[qn_esccrito]);
 			inodo_lida.dados_diretos[A->posicao++] = buffer[qn_esccrito++];
 			//qn_esccrito++;
 			// decrementa 1 byte
@@ -554,16 +553,15 @@ uint16_t meu_fread(MEU_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count)
 		*/
 	}
 
-		
-	printf("AQUIIII CARAIi\n" );	
-
+	//printf("oiiiiiiiiiiiiiii 2\n");
 	/*se for ler ainda e tem q verificar se tem algo no indireto e alocar*/  
 	// verifica se chegou no final e tem algo p escrever
 	if (inodo_lida.indireto==0xFFFF && qtd_ler > 0)  
 	{
 		/*caso não foi alocado, devemos alocar o indireto*/
 		inodo_lida.indireto = aloca ();
-		
+	}
+
 
 	/*Calcula deslocamento e entrada corrente*/
 	// dos blocos de endereço seja a inicial
@@ -586,11 +584,10 @@ uint16_t meu_fread(MEU_FILE *A, uint8_t * buffer, uint16_t size, uint16_t count)
 				}
 				deslocamento = 0;
 				numero_entrada++;
-			}
-		}
+	}
 		
-		buffer[size * count] = '\0'; //grava a pŕoxima posição como caracter final de frase. (caso for uma string)
-		return qn_lido; //retorna quantos bytes foram lidos
+	buffer[size * count] = '\0'; //grava a pŕoxima posição como caracter final de frase. (caso for uma string)
+	return qn_lido; //retorna quantos bytes foram lidos
 	
 
 }

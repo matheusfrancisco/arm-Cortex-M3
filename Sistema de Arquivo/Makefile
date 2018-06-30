@@ -1,6 +1,6 @@
 GCC_BIN =  /usr/bin/X11/
 PROJECT = main
-OBJECTS = system_LPC17xx.o startup_LPC17xx.o i2c_software.o uart.o main.o  memoria.o digital.o SA.o tarefa.o
+OBJECTS = system_LPC17xx.o startup_LPC17xx.o main.o digital.o tarefa.o i2c_software.o uart.o  memoria.o SA.o
 SYS_OBJECTS = 
 INCLUDE_PATHS = -I. -I./LPC1768 
 LIBRARY_PATHS = 
